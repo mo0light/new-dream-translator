@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Dream {
+  id              String   @id @default(cuid())
+  title           String
+  rawDescription  String                    // 用户原始输入的梦境描述
+  organizedDream  String?                   // AI整理后的有逻辑的梦境叙述
+  symbols         String?                   // 梦境符号/意象 (JSON array string)
+  psychologyAnalysis String?                // 心理学分析
+  emotionAnalysis String?                   // 情感分析
+  suggestions     String?                   // 建议与指导 (JSON array string)
+  overallScore    Int?                      // 综合评分 0-100
+  moodTag         String?                   // 情绪标签
+  category        String?                   // 梦境分类 (如: 噩梦、美梦、焦虑梦等)
+  reportHtml      String?                   // 诊断报告HTML内容
+  searchSources   String?                   // 联网搜索参考来源 (JSON array string)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
