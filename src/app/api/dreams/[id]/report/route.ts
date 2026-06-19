@@ -24,6 +24,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+    console.log('[Report] Generating report for dream:', id)
 
     const dream = await db.dream.findUnique({ where: { id } })
 
@@ -31,15 +32,19 @@ export async function POST(
       return NextResponse.json({ error: '梦境不存在' }, { status: 404 })
     }
 
+    const symbols = safeParse(dream.symbols)
+    const suggestions = safeParse(dream.suggestions)
+    console.log('[Report] Parsed symbols:', symbols.length, 'suggestions:', suggestions.length)
+
     const html = generateReportHtml({
       id: dream.id,
       title: dream.title,
       rawDescription: dream.rawDescription,
       organizedDream: dream.organizedDream,
-      symbols: safeParse(dream.symbols),
+      symbols,
       psychologyAnalysis: dream.psychologyAnalysis,
       emotionAnalysis: dream.emotionAnalysis,
-      suggestions: safeParse(dream.suggestions),
+      suggestions,
       overallScore: dream.overallScore,
       moodTag: dream.moodTag,
       category: dream.category,
@@ -48,15 +53,16 @@ export async function POST(
       updatedAt: dream.updatedAt.toISOString(),
     })
 
-    const safeTitle = dream.title.replace(/[^\w一-鿿]/g, '_').slice(0, 30)
+    const filename = `dream-report-${id}.html`
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `attachment; filename="dream-report-${safeTitle}.html"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
   } catch (error) {
-    console.error('Report generation error:', error)
+    console.error('[Report] Error:', error instanceof Error ? error.message : error)
+    console.error('[Report] Stack:', error instanceof Error ? error.stack : 'no stack')
     return NextResponse.json(
       { error: '报告生成失败，请稍后重试' },
       { status: 500 }
